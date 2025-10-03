@@ -9,9 +9,10 @@ package main
 
 import (
 	"context"
-	
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/stpabhi/powerbi-go/types"
 
 	"github.com/stpabhi/powerbi-go"
 )
@@ -20,7 +21,7 @@ func main() {
 	clientID := "<client_id>"
 	clientSecret := "<client_secret>"
 	tenantID := "<tenant_id>"
-	
+
 	ctx := context.Background()
 
 	// Authenticate with Azure Go SDK
@@ -37,7 +38,7 @@ func main() {
 
 	// Create Power BI client
 	pbi := powerbi.NewFromToken(token.Token)
-	groups, err := pbi.Groups.List(ctx)
+	groups, err := pbi.Groups.List(ctx, types.ListGroupsOptions{})
 	if err != nil {
 		panic(err)
 	}
