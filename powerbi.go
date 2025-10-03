@@ -8,8 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
+	"github.com/google/go-querystring/query"
 	"github.com/stpabhi/powerbi-go/types"
 )
 
@@ -40,6 +42,28 @@ type Client struct {
 
 type service struct {
 	client *Client
+}
+
+// addOptions adds the parameters in opts as URL query parameters to s. opts
+// must be a struct whose fields may contain "url" tags.
+func addOptions(s string, opts interface{}) (string, error) {
+	v := reflect.ValueOf(opts)
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		return s, nil
+	}
+
+	u, err := url.Parse(s)
+	if err != nil {
+		return s, err
+	}
+
+	qs, err := query.Values(opts)
+	if err != nil {
+		return s, err
+	}
+
+	u.RawQuery = qs.Encode()
+	return u.String(), nil
 }
 
 // NewFromToken returns a new Power BI API client with the given API token.
@@ -96,6 +120,14 @@ func (c *Client) postJSON(ctx context.Context, path string, obj any, headerKV ..
 		headerKV = append(headerKV, "Content-Type", mediaType)
 	}
 	return c.doRequest(ctx, http.MethodPost, path, body, headerKV...)
+}
+
+func (c *Client) putJSON(ctx context.Context, path string, obj any, headerKV ...string) (*http.Request, *http.Response, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return nil, nil, err
+	}
+	return c.doRequest(ctx, http.MethodPut, path, bytes.NewBuffer(data), append(headerKV, "Content-Type", mediaType)...)
 }
 
 func (c *Client) doRequest(ctx context.Context, method, path string, body io.Reader, headerKV ...string) (*http.Request, *http.Response, error) {
@@ -186,4 +218,9 @@ func (t *TokenTransport) transport() http.RoundTripper {
 		return t.Transport
 	}
 	return http.DefaultTransport
+}
+
+// PtrTo returns a pointer to the provided input.
+func PtrTo[T any](v T) *T {
+	return &v
 }
