@@ -12,9 +12,9 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/stpabhi/powerbi-go/types"
-
+	
 	"github.com/stpabhi/powerbi-go"
+	"github.com/stpabhi/powerbi-go/types"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 	}
 
 	for _, g := range groups {
-		println(g.Name)
+		println(g.String())
 	}
 }
 ```

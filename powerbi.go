@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/google/go-querystring/query"
+
 	"github.com/stpabhi/powerbi-go/types"
 )
 
@@ -37,7 +38,8 @@ type Client struct {
 	common service
 
 	// Add services here
-	Groups *GroupsService
+	Groups  *GroupsService
+	Reports *ReportsService
 }
 
 type service struct {
@@ -91,6 +93,7 @@ func NewClient(httpClient *http.Client) *Client {
 
 	// Add services here
 	c.Groups = (*GroupsService)(&c.common)
+	c.Reports = (*ReportsService)(&c.common)
 
 	return c
 }

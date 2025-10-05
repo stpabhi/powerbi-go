@@ -102,7 +102,7 @@ func (s *GroupsService) AddGroupUser(ctx context.Context, groupID string, user t
 
 // DeleteGroupUser removes a user's access from a workspace.
 // The user parameter may be an email address or object ID.
-func (s *GroupsService) DeleteGroupUser(ctx context.Context, groupID string, user string, opts types.DeleteGroupUserOptions) error {
+func (s *GroupsService) DeleteGroupUser(ctx context.Context, groupID, user string, opts types.DeleteGroupUserOptions) error {
 	u := fmt.Sprintf("%s/%s/users/%s", groupsBasePath, url.PathEscape(groupID), url.PathEscape(user))
 	u, err := addOptions(u, opts)
 	if err != nil {
