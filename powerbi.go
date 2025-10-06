@@ -38,8 +38,11 @@ type Client struct {
 	common service
 
 	// Add services here
-	Groups  *GroupsService
-	Reports *ReportsService
+	Dashboards *DashboardsService
+	Datasets   *DatasetsService
+	Groups     *GroupsService
+	Reports    *ReportsService
+	EmbedToken *EmbedTokenService
 }
 
 type service struct {
@@ -92,8 +95,11 @@ func NewClient(httpClient *http.Client) *Client {
 	c.common.client = c
 
 	// Add services here
+	c.Dashboards = (*DashboardsService)(&c.common)
+	c.Datasets = (*DatasetsService)(&c.common)
 	c.Groups = (*GroupsService)(&c.common)
 	c.Reports = (*ReportsService)(&c.common)
+	c.EmbedToken = (*EmbedTokenService)(&c.common)
 
 	return c
 }
