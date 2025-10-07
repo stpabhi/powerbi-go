@@ -22,3 +22,22 @@ type DatasourceConnectionDetails struct {
 	Server       string `json:"server,omitempty"`
 	URL          string `json:"url,omitempty"`
 }
+
+type DatasetUserAccessRight string
+
+const (
+	DatasetUserAccessRightNone                    DatasetUserAccessRight = "None"
+	DatasetUserAccessRightRead                    DatasetUserAccessRight = "Read"
+	DatasetUserAccessRightReadWrite               DatasetUserAccessRight = "ReadWrite"
+	DatasetUserAccessRightReadReshare             DatasetUserAccessRight = "ReadReshare"
+	DatasetUserAccessRightReadWriteReshare        DatasetUserAccessRight = "ReadWriteReshare"
+	DatasetUserAccessRightReadExplore             DatasetUserAccessRight = "ReadExplore"
+	DatasetUserAccessRightReadReshareExplore      DatasetUserAccessRight = "ReadReshareExplore"
+	DatasetUserAccessRightReadWriteExplore        DatasetUserAccessRight = "ReadWriteExplore"
+	DatasetUserAccessRightReadWriteReshareExplore DatasetUserAccessRight = "ReadWriteReshareExplore"
+)
+
+type DatasetUser struct {
+	User                   `json:",inline"`
+	DatasetUserAccessRight DatasetUserAccessRight `json:"datasetUserAccessRight"`
+}

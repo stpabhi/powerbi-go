@@ -69,18 +69,18 @@ type RdlBindToGatewayRequest struct {
 
 // Report represents a Power BI report.
 type Report struct {
-	AppID            *string        `json:"appId,omitempty"`
-	DatasetID        *string        `json:"datasetId,omitempty"`
-	Description      *string        `json:"description,omitempty"`
-	EmbedURL         *string        `json:"embedUrl,omitempty"`
+	AppID            string         `json:"appId,omitempty"`
+	DatasetID        string         `json:"datasetId,omitempty"`
+	Description      string         `json:"description,omitempty"`
+	EmbedURL         string         `json:"embedUrl,omitempty"`
 	ID               string         `json:"id"`
 	IsOwnedByMe      bool           `json:"isOwnedByMe,omitempty"`
 	Name             string         `json:"name"`
-	OriginalReportID *string        `json:"originalReportId,omitempty"`
+	OriginalReportID string         `json:"originalReportId,omitempty"`
 	ReportType       ReportType     `json:"reportType"`
 	Subscriptions    []Subscription `json:"subscriptions,omitempty"`
 	Users            []ReportUser   `json:"users,omitempty"`
-	WebURL           *string        `json:"webUrl,omitempty"`
+	WebURL           string         `json:"webUrl,omitempty"`
 }
 
 type ReportList struct {

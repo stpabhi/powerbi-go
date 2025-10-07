@@ -30,14 +30,14 @@ type AzureResource struct {
 // Fields are expanded to cover commonly returned properties. Unknown fields
 // will be ignored by json unmarshalling if not present in responses.
 type Group struct {
-	ID                          string                      `json:"id"`
-	Name                        string                      `json:"name"`
 	CapacityID                  *string                     `json:"capacityId,omitempty"`
 	DataflowStorageID           *string                     `json:"dataflowStorageId,omitempty"`
 	DefaultDatasetStorageFormat DefaultDatasetStorageFormat `json:"defaultDatasetStorageFormat,omitempty"`
+	ID                          string                      `json:"id"`
 	IsOnDedicatedCapacity       bool                        `json:"isOnDedicatedCapacity,omitempty"`
 	IsReadOnly                  bool                        `json:"isReadOnly,omitempty"`
 	LogAnalyticsWorkspace       *AzureResource              `json:"logAnalyticsWorkspace,omitempty"`
+	Name                        string                      `json:"name"`
 }
 
 type WorkspaceV2 bool

@@ -26,18 +26,22 @@ type ServicePrincipalProfile struct {
 	ID          string `json:"id,omitempty"`
 }
 
+type User struct {
+	DisplayName   string                   `json:"displayName,omitempty"`
+	EmailAddress  string                   `json:"emailAddress,omitempty"`
+	GraphID       string                   `json:"graphId,omitempty"`
+	Identifier    string                   `json:"identifier"`
+	PrincipalType PrincipalType            `json:"principalType"`
+	Profile       *ServicePrincipalProfile `json:"profile,omitempty"`
+	UserType      string                   `json:"userType,omitempty"`
+}
+
 // GroupUser represents a user or principal with access to a workspace (group).
 // For POST/PUT requests, the typical required fields are Identifier,
 // GroupUserAccessRight, and PrincipalType.
 type GroupUser struct {
-	GroupUserAccessRight GroupUserAccessRight     `json:"groupUserAccessRight"`
-	Identifier           string                   `json:"identifier"`
-	PrincipalType        PrincipalType            `json:"principalType"`
-	DisplayName          *string                  `json:"displayName,omitempty"`
-	EmailAddress         *string                  `json:"emailAddress,omitempty"`
-	GraphID              *string                  `json:"graphId,omitempty"`
-	Profile              *ServicePrincipalProfile `json:"profile,omitempty"`
-	UserType             *string                  `json:"userType,omitempty"`
+	User                 `json:",inline"`
+	GroupUserAccessRight GroupUserAccessRight `json:"groupUserAccessRight"`
 }
 
 type DeleteGroupUserOptions struct {

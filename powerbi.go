@@ -38,6 +38,7 @@ type Client struct {
 	common service
 
 	// Add services here
+	Admin      *AdminService
 	Dashboards *DashboardsService
 	Datasets   *DatasetsService
 	Groups     *GroupsService
@@ -95,6 +96,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.common.client = c
 
 	// Add services here
+	c.Admin = (*AdminService)(&c.common)
 	c.Dashboards = (*DashboardsService)(&c.common)
 	c.Datasets = (*DatasetsService)(&c.common)
 	c.Groups = (*GroupsService)(&c.common)
