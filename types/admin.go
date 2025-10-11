@@ -77,7 +77,7 @@ type AdminDataflow struct {
 
 type AdminDataset struct {
 	ContentProviderType              string              `json:"contentProviderType,omitempty"`
-	Encryption                       Encryption          `json:"encryption,omitempty"`
+	Encryption                       *Encryption         `json:"encryption,omitempty"`
 	IsEffectiveIdentityRequired      bool                `json:"isEffectiveIdentityRequired,omitempty"`
 	IsEffectiveIdentityRolesRequired bool                `json:"isEffectiveIdentityRolesRequired,omitempty"`
 	IsInPlaceSharingEnabled          bool                `json:"isInPlaceSharingEnabled,omitempty"`

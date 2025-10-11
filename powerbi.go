@@ -38,12 +38,13 @@ type Client struct {
 	common service
 
 	// Add services here
-	Admin      *AdminService
-	Dashboards *DashboardsService
-	Datasets   *DatasetsService
-	Groups     *GroupsService
-	Reports    *ReportsService
-	EmbedToken *EmbedTokenService
+	Admin        *AdminService
+	Dashboards   *DashboardsService
+	Datasets     *DatasetsService
+	EmbedToken   *EmbedTokenService
+	Groups       *GroupsService
+	PushDatasets *PushDatasetsService
+	Reports      *ReportsService
 }
 
 type service struct {
@@ -52,9 +53,9 @@ type service struct {
 
 // addOptions adds the parameters in opts as URL query parameters to s. opts
 // must be a struct whose fields may contain "url" tags.
-func addOptions(s string, opts interface{}) (string, error) {
+func addOptions(s string, opts any) (string, error) {
 	v := reflect.ValueOf(opts)
-	if v.Kind() == reflect.Ptr && v.IsNil() {
+	if v.Kind() == reflect.Pointer && v.IsNil() {
 		return s, nil
 	}
 
@@ -99,9 +100,10 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Admin = (*AdminService)(&c.common)
 	c.Dashboards = (*DashboardsService)(&c.common)
 	c.Datasets = (*DatasetsService)(&c.common)
-	c.Groups = (*GroupsService)(&c.common)
-	c.Reports = (*ReportsService)(&c.common)
 	c.EmbedToken = (*EmbedTokenService)(&c.common)
+	c.Groups = (*GroupsService)(&c.common)
+	c.PushDatasets = (*PushDatasetsService)(&c.common)
+	c.Reports = (*ReportsService)(&c.common)
 
 	return c
 }

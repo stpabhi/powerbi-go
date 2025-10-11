@@ -10,20 +10,20 @@ type DatasourceIdentity struct {
 // DatasourceSelector is an object that uniquely identifies a single data source by its connection details.
 // https://learn.microsoft.com/en-us/rest/api/power-bi/embed-token/generate-token#datasourceselector
 type DatasourceSelector struct {
-	DatasourceType    string                      `json:"datasourceType,omitempty"`
-	ConnectionDetails DatasourceConnectionDetails `json:"connectionDetails,omitempty"`
+	DatasourceType    string                       `json:"datasourceType,omitempty"`
+	ConnectionDetails *DatasourceConnectionDetails `json:"connectionDetails,omitempty"`
 }
 
 // EffectiveIdentity defines the user identity and roles.
 // https://learn.microsoft.com/en-us/rest/api/power-bi/embed-token/generate-token#effectiveidentity
 type EffectiveIdentity struct {
-	Username         string       `json:"username,omitempty"`
-	Roles            []string     `json:"roles,omitempty"`
-	Datasets         []string     `json:"datasets,omitempty"`
-	CustomData       string       `json:"customData,omitempty"`
-	IdentityBlob     IdentityBlob `json:"identityBlob,omitempty"`
-	AuditableContext string       `json:"auditableContext,omitempty"`
-	Reports          []string     `json:"reports,omitempty"`
+	Username         string        `json:"username,omitempty"`
+	Roles            []string      `json:"roles,omitempty"`
+	Datasets         []string      `json:"datasets,omitempty"`
+	CustomData       string        `json:"customData,omitempty"`
+	IdentityBlob     *IdentityBlob `json:"identityBlob,omitempty"`
+	AuditableContext string        `json:"auditableContext,omitempty"`
+	Reports          []string      `json:"reports,omitempty"`
 }
 
 type EmbedToken struct {
@@ -63,10 +63,12 @@ type GenerateTokenRequestV2Dataset struct {
 	ID              string          `json:"id,omitempty"`
 	XMLAPermissions XMLAPermissions `json:"xmlaPermissions,omitempty"`
 }
+
 type GenerateTokenRequestV2Report struct {
 	AllowEdit bool   `json:"allowEdit,omitempty"`
 	ID        string `json:"id,omitempty"`
 }
+
 type GenerateTokenRequestV2TargetWorkspace struct {
 	ID string `json:"id,omitempty"`
 }

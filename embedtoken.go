@@ -27,9 +27,9 @@ func (s *EmbedTokenService) GenerateToken(ctx context.Context, req types.Generat
 
 // GenerateTokenForDashboardsInGroup generates an embed token for a dashboard in a workspace.
 // POST /groups/{groupId}/dashboards/{dashboardId}/GenerateToken
-func (s *EmbedTokenService) GenerateTokenForDashboardsInGroup(ctx context.Context, groupID, dashboardID string, body types.GenerateTokenRequest) (*types.EmbedToken, error) {
+func (s *EmbedTokenService) GenerateTokenForDashboardsInGroup(ctx context.Context, groupID, dashboardID string, req types.GenerateTokenRequest) (*types.EmbedToken, error) {
 	u := fmt.Sprintf("%s/%s/%s/%s/GenerateToken", groupsBasePath, url.PathEscape(groupID), dashboardsBasePath, url.PathEscape(dashboardID))
-	_, resp, err := s.client.postJSON(ctx, u, body)
+	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +40,9 @@ func (s *EmbedTokenService) GenerateTokenForDashboardsInGroup(ctx context.Contex
 
 // GenerateTokenForDatasetsInGroup generates an embed token based on the specified dataset from the specified workspace.
 // POST /groups/{groupId}/datasets/{datasetId}/GenerateToken
-func (s *EmbedTokenService) GenerateTokenForDatasetsInGroup(ctx context.Context, groupID, datasetID string, body types.GenerateTokenRequest) (*types.EmbedToken, error) {
+func (s *EmbedTokenService) GenerateTokenForDatasetsInGroup(ctx context.Context, groupID, datasetID string, req types.GenerateTokenRequest) (*types.EmbedToken, error) {
 	u := fmt.Sprintf("%s/%s/%s/%s/GenerateToken", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
-	_, resp, err := s.client.postJSON(ctx, u, body)
+	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +53,9 @@ func (s *EmbedTokenService) GenerateTokenForDatasetsInGroup(ctx context.Context,
 
 // GenerateTokenForReportsCreateInGroup generates an embed token to allow report creation in the specified workspace based on the specified dataset.
 // POST /groups/{groupId}/reports/GenerateToken
-func (s *EmbedTokenService) GenerateTokenForReportsCreateInGroup(ctx context.Context, groupID string, body types.GenerateTokenRequest) (*types.EmbedToken, error) {
+func (s *EmbedTokenService) GenerateTokenForReportsCreateInGroup(ctx context.Context, groupID string, req types.GenerateTokenRequest) (*types.EmbedToken, error) {
 	u := fmt.Sprintf("%s/%s/%s/GenerateToken", groupsBasePath, url.PathEscape(groupID), reportsBasePath)
-	_, resp, err := s.client.postJSON(ctx, u, body)
+	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +79,9 @@ func (s *EmbedTokenService) GenerateTokenForReportsInGroup(ctx context.Context, 
 
 // GenerateTokenForTilesInGroup generates an embed token to view the specified tile from the specified workspace.
 // POST /groups/{groupId}/dashboards/{dashboardId}/tiles/{tileId}/GenerateToken
-func (s *EmbedTokenService) GenerateTokenForTilesInGroup(ctx context.Context, groupID, dashboardID, tileID string, body types.GenerateTokenRequest) (*types.EmbedToken, error) {
+func (s *EmbedTokenService) GenerateTokenForTilesInGroup(ctx context.Context, groupID, dashboardID, tileID string, req types.GenerateTokenRequest) (*types.EmbedToken, error) {
 	u := fmt.Sprintf("%s/%s/%s/%s/tiles/%s/GenerateToken", groupsBasePath, url.PathEscape(groupID), dashboardsBasePath, url.PathEscape(dashboardID), url.PathEscape(tileID))
-	_, resp, err := s.client.postJSON(ctx, u, body)
+	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
 	}
