@@ -24,6 +24,10 @@ type Dataset struct {
 	WebURL                           string                        `json:"webUrl,omitempty"`
 }
 
+type DatasetList struct {
+	Value []Dataset `json:"value"`
+}
+
 type DatasetQueryScaleOutSettings struct {
 	AutoSyncReadOnlyReplicas bool `json:"autoSyncReadOnlyReplicas,omitempty"`
 	MaxReadOnlyReplicas      int  `json:"maxReadOnlyReplicas,omitempty"`
@@ -37,6 +41,10 @@ type Datasource struct {
 	ConnectionString  string                       `json:"connectionString,omitempty"`
 	GatewayID         string                       `json:"gatewayId,omitempty"`
 	Name              string                       `json:"name,omitempty"`
+}
+
+type DatasourceList struct {
+	Value []Datasource `json:"value"`
 }
 
 type DatasourceConnectionDetails struct {
@@ -122,6 +130,51 @@ type CreateDatasetRequest struct {
 	Tables        []Table        `json:"tables"`
 }
 
+type BindToGatewayRequest struct {
+	DatasourceObjectIDs []string `json:"datasourceObjectIds"`
+	GatewayObjectID     string   `json:"gatewayObjectId,omitempty"`
+}
+
+type DatasetExecuteQueriesRequest struct {
+	ImpersonatedUserName string                                     `json:"impersonatedUserName"`
+	Queries              []DatasetExecuteQueriesQuery               `json:"queries"`
+	SerializerSettings   DatasetExecuteQueriesSerializationSettings `json:"serializerSettings"`
+}
+
+type DatasetExecuteQueriesResponse struct {
+	Error                      DatasetExecuteQueriesError                      `json:"error,omitempty"`
+	InformationProtectionLabel DatasetExecuteQueriesInformationProtectionLabel `json:"informationProtectionLabel,omitempty"`
+	Results                    []DatasetExecuteQueriesQueryResult              `json:"results"`
+}
+
+type DatasetExecuteQueriesError struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+type DatasetExecuteQueriesInformationProtectionLabel struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type DatasetExecuteQueriesQuery struct {
+	Query string `json:"query"`
+}
+
+type DatasetExecuteQueriesQueryResult struct {
+	Error  DatasetExecuteQueriesError         `json:"error,omitempty"`
+	Tables []DatasetExecuteQueriesTableResult `json:"tables,omitempty"`
+}
+
+type DatasetExecuteQueriesTableResult struct {
+	Error DatasetExecuteQueriesError `json:"error,omitempty"`
+	Rows  []any                      `json:"rows,omitempty"`
+}
+
+type DatasetExecuteQueriesSerializationSettings struct {
+	IncludeNulls bool `json:"includeNulls,omitempty"`
+}
+
 // Column is a dataset column.
 type Column struct {
 	DataCategory string `json:"dataCategory,omitempty"`
@@ -167,4 +220,54 @@ type Table struct {
 // TableList is Power BI table collection
 type TableList struct {
 	Value []Table `json:"value"`
+}
+
+type DatasetToDataflowLinkResponse struct {
+	DataflowObjectID  string `json:"dataflowObjectId"`
+	DatasetObjectID   string `json:"datasetObjectId"`
+	WorkspaceObjectID string `json:"workspaceObjectId"`
+}
+
+type DatasetToDataflowLinksResponse struct {
+	Value []DatasetToDataflowLinkResponse `json:"value"`
+}
+
+type DatasetUserAccess struct {
+	DatasetUserAccessRight DatasetUserAccessRight `json:"datasetUserAccessRight"`
+	Identifier             string                 `json:"identifier"`
+	PrincipalType          PrincipalType          `json:"principalType"`
+}
+
+type DatasetUsersAccess struct {
+	Value []DatasetUserAccess `json:"value"`
+}
+
+type Day string
+
+const (
+	DaySunday    Day = "Sunday"
+	DayMonday    Day = "Monday"
+	DayTuesday   Day = "Tuesday"
+	DayWednesday Day = "Wednesday"
+	DayThursday  Day = "Thursday"
+	DayFriday    Day = "Friday"
+	DaySaturday  Day = "Saturday"
+)
+
+type DirectQueryRefreshSchedule struct {
+	Days            []Day    `json:"days"`
+	Frequency       int      `json:"frequency"`
+	LocalTimeZoneID string   `json:"localTimeZoneId"`
+	Times           []string `json:"times"`
+}
+
+type MashupParameter struct {
+	CurrentValue    string   `json:"currentValue"`
+	IsRequired      bool     `json:"isRequired"`
+	Name            string   `json:"name"`
+	SuggestedValues []string `json:"suggestedValues,omitempty"`
+	Type            string   `json:"type"`
+}
+type MashupParameterList struct {
+	Value []MashupParameter `json:"value"`
 }
