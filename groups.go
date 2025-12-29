@@ -149,3 +149,99 @@ func (s *GroupsService) UpdateGroupUser(ctx context.Context, groupID string, use
 
 	return nil
 }
+
+// AddDashboard creates a new empty dashboard in the specified workspace.
+func (s *GroupsService) AddDashboard(ctx context.Context, groupID string, req types.AddDashboardRequest) (*types.Dashboard, error) {
+	u := fmt.Sprintf("%s/%s/dashboards", groupsBasePath, url.PathEscape(groupID))
+	_, resp, err := s.client.postJSON(ctx, u, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.Dashboard{})
+}
+
+// DeleteDashboard deletes the specified dashboard from the specified workspace.
+func (s *GroupsService) DeleteDashboard(ctx context.Context, groupID, dashboardID string) error {
+	u := fmt.Sprintf("%s/%s/dashboards/%s", groupsBasePath, url.PathEscape(groupID), url.PathEscape(dashboardID))
+	_, resp, err := s.client.doRequest(ctx, http.MethodDelete, u, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+// GetDashboard returns the specified dashboard from the specified workspace.
+func (s *GroupsService) GetDashboard(ctx context.Context, groupID, dashboardID string) (*types.Dashboard, error) {
+	u := fmt.Sprintf("%s/%s/dashboards/%s", groupsBasePath, url.PathEscape(groupID), url.PathEscape(dashboardID))
+	_, resp, err := s.client.doRequest(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.Dashboard{})
+}
+
+// ListDashboards returns a list of dashboards from the specified workspace.
+func (s *GroupsService) ListDashboards(ctx context.Context, groupID string) ([]types.Dashboard, error) {
+	u := fmt.Sprintf("%s/%s/dashboards", groupsBasePath, url.PathEscape(groupID))
+	_, resp, err := s.client.doRequest(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result types.DashboardList
+	_, err = toObject(resp, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Value, nil
+}
+
+// CloneTile the specified tile from the specified workspace.
+func (s *GroupsService) CloneTile(ctx context.Context, groupID, dashboardID, tileID string, req types.CloneTileRequest) (*types.Tile, error) {
+	u := fmt.Sprintf("%s/%s/dashboards/%s/tiles/%s/Clone", groupsBasePath, url.PathEscape(groupID), url.PathEscape(dashboardID), url.PathEscape(tileID))
+	_, resp, err := s.client.postJSON(ctx, u, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.Tile{})
+}
+
+// GetTile returns the specified tile within the specified dashboard from the specified workspace.
+func (s *GroupsService) GetTile(ctx context.Context, groupID, dashboardID, tileID string) (*types.Tile, error) {
+	u := fmt.Sprintf("%s/%s/dashboards/%s/tiles/%s", groupsBasePath, url.PathEscape(groupID), url.PathEscape(dashboardID), url.PathEscape(tileID))
+	_, resp, err := s.client.doRequest(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.Tile{})
+}
+
+// ListTiles returns a list of tiles within the specified dashboard from the specified workspace.
+func (s *GroupsService) ListTiles(ctx context.Context, groupID, dashboardID string) ([]types.Tile, error) {
+	u := fmt.Sprintf("%s/%s/dashboards/%s/tiles", groupsBasePath, url.PathEscape(groupID), url.PathEscape(dashboardID))
+	_, resp, err := s.client.doRequest(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result types.TileList
+	_, err = toObject(resp, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Value, nil
+}
