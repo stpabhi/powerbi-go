@@ -21,6 +21,8 @@ type DatasetsInterface interface {
 	Group() DatasetGroup
 }
 
+// DatasetGroup calls the dataset APIs of one workspace, given by its group ID. An
+// empty group ID is My workspace.
 type DatasetGroup interface {
 	BindToGateway(ctx context.Context, groupID, datasetID string, req types.BindToGatewayRequest) error
 	CancelRefresh(ctx context.Context, groupID, datasetID, refreshID string) error
@@ -42,6 +44,17 @@ type DatasetGroup interface {
 
 type datasetGroupService service
 
+// datasetsPath is the datasets collection of a workspace: groups/{groupID}/datasets,
+// or datasets in My workspace when groupID is empty. Power BI refuses the
+// groups paths for a personal workspace (GroupNotAccessible), so My workspace
+// is addressed without a group.
+func datasetsPath(groupID string) string {
+	if groupID == "" {
+		return datasetsBasePath
+	}
+	return groupsBasePath + "/" + url.PathEscape(groupID) + "/" + datasetsBasePath
+}
+
 func (s *DatasetsService) Group() DatasetGroup {
 	return &datasetGroupService{s.client}
 }
@@ -49,7 +62,7 @@ func (s *DatasetsService) Group() DatasetGroup {
 // BindToGateway Binds the specified dataset from the specified workspace to the specified gateway, optionally with a given set of data source IDs.
 // If you don't supply a specific data source ID, the dataset will be bound to the first matching data source in the gateway.
 func (s *datasetGroupService) BindToGateway(ctx context.Context, groupID, datasetID string, req types.BindToGatewayRequest) error {
-	u := fmt.Sprintf("%s/%s/%s/%s/Default.BindToGateway", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/Default.BindToGateway", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return err
@@ -61,7 +74,7 @@ func (s *datasetGroupService) BindToGateway(ctx context.Context, groupID, datase
 
 // CancelRefresh cancels the specified refresh operation for the specified dataset from the specified workspace.
 func (s *datasetGroupService) CancelRefresh(ctx context.Context, groupID, datasetID, refreshID string) error {
-	u := fmt.Sprintf("%s/%s/%s/%s/refreshes/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID), url.PathEscape(refreshID))
+	u := fmt.Sprintf("%s/%s/refreshes/%s", datasetsPath(groupID), url.PathEscape(datasetID), url.PathEscape(refreshID))
 	_, resp, err := s.client.doRequest(ctx, "DELETE", u, nil)
 	if err != nil {
 		return err
@@ -73,7 +86,7 @@ func (s *datasetGroupService) CancelRefresh(ctx context.Context, groupID, datase
 
 // DeleteDataset deletes the specified dataset from the specified workspace.
 func (s *datasetGroupService) DeleteDataset(ctx context.Context, groupID, datasetID string) error {
-	u := fmt.Sprintf("%s/%s/%s/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "DELETE", u, nil)
 	if err != nil {
 		return err
@@ -85,7 +98,7 @@ func (s *datasetGroupService) DeleteDataset(ctx context.Context, groupID, datase
 
 // DiscoverGateways returns a list of gateways that the specified dataset from the specified workspace can be bound to.
 func (s *datasetGroupService) DiscoverGateways(ctx context.Context, groupID, datasetID string) (*types.GatewayList, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/Default.DiscoverGateways", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/Default.DiscoverGateways", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -103,7 +116,7 @@ func (s *datasetGroupService) DiscoverGateways(ctx context.Context, groupID, dat
 
 // ExecuteQueries executes Data Analysis Expressions (DAX) queries against the provided dataset.
 func (s *datasetGroupService) ExecuteQueries(ctx context.Context, groupID, datasetID string, req types.DatasetExecuteQueriesRequest) (*types.DatasetExecuteQueriesResponse, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/executeQueries", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/executeQueries", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
@@ -123,7 +136,7 @@ func (s *datasetGroupService) ExecuteQueries(ctx context.Context, groupID, datas
 
 // Dataset returns the specified dataset from the specified workspace.
 func (s *datasetGroupService) Dataset(ctx context.Context, groupID, datasetID string) (*types.Dataset, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -135,7 +148,7 @@ func (s *datasetGroupService) Dataset(ctx context.Context, groupID, datasetID st
 
 // DatasetToDataflowLinks returns a list of upstream dataflows for datasets from the specified workspace.
 func (s *datasetGroupService) DatasetToDataflowLinks(ctx context.Context, groupID string) (*types.DatasetToDataflowLinksResponse, error) {
-	u := fmt.Sprintf("%s/%s/%s/upstreamDataflows", groupsBasePath, url.PathEscape(groupID), datasetsBasePath)
+	u := datasetsPath(groupID) + "/upstreamDataflows"
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -147,7 +160,7 @@ func (s *datasetGroupService) DatasetToDataflowLinks(ctx context.Context, groupI
 
 // DatasetUsers returns a list of principals that have access to the specified dataset.
 func (s *datasetGroupService) DatasetUsers(ctx context.Context, groupID, datasetID string) (*types.DatasetUsersAccess, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/users", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/users", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -159,7 +172,7 @@ func (s *datasetGroupService) DatasetUsers(ctx context.Context, groupID, dataset
 
 // Datasets returns a list of datasets from the specified workspace.
 func (s *datasetGroupService) Datasets(ctx context.Context, groupID string) (*types.DatasetList, error) {
-	u := fmt.Sprintf("%s/%s/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath)
+	u := datasetsPath(groupID)
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -171,7 +184,7 @@ func (s *datasetGroupService) Datasets(ctx context.Context, groupID string) (*ty
 
 // Datasources returns a list of data sources for the specified dataset from the specified workspace.
 func (s *datasetGroupService) Datasources(ctx context.Context, groupID, datasetID string) (*types.DatasourceList, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/datasources", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/datasources", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -183,7 +196,7 @@ func (s *datasetGroupService) Datasources(ctx context.Context, groupID, datasetI
 
 // DirectQueryRefreshSchedule returns the refresh schedule for a specified DirectQuery or LiveConnection dataset from the specified workspace.
 func (s *datasetGroupService) DirectQueryRefreshSchedule(ctx context.Context, groupID, datasetID string) (*types.DirectQueryRefreshSchedule, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/directQueryRefreshSchedule", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/directQueryRefreshSchedule", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -195,7 +208,7 @@ func (s *datasetGroupService) DirectQueryRefreshSchedule(ctx context.Context, gr
 
 // GatewayDatasources returns a list of gateway data sources for the specified dataset from the specified workspace.
 func (s *datasetGroupService) GatewayDatasources(ctx context.Context, groupID, datasetID string) (*types.GatewayDatasourceList, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/Default.GetBoundGatewayDatasources", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/Default.GetBoundGatewayDatasources", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -207,7 +220,7 @@ func (s *datasetGroupService) GatewayDatasources(ctx context.Context, groupID, d
 
 // Parameters returns a list of parameters for the specified dataset from the specified workspace.
 func (s *datasetGroupService) Parameters(ctx context.Context, groupID, datasetID string) (*types.MashupParameterList, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/parameters", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/parameters", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -222,7 +235,7 @@ func (s *datasetGroupService) Parameters(ctx context.Context, groupID, datasetID
 // RefreshExecutionDetails for an enhanced refresh. A request whose response is lost
 // may still have been accepted, so check RefreshHistory before sending it again.
 func (s *datasetGroupService) RefreshDataset(ctx context.Context, groupID, datasetID string, req types.DatasetRefreshRequest) (*types.RefreshAccepted, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/refreshes", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/refreshes", datasetsPath(groupID), url.PathEscape(datasetID))
 	_, resp, err := s.client.postJSON(ctx, u, req)
 	if err != nil {
 		return nil, err
@@ -241,7 +254,7 @@ func (s *datasetGroupService) RefreshDataset(ctx context.Context, groupID, datas
 
 // RefreshExecutionDetails returns the state of the specified enhanced refresh of the specified dataset.
 func (s *datasetGroupService) RefreshExecutionDetails(ctx context.Context, groupID, datasetID, refreshID string) (*types.RefreshExecutionDetails, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/refreshes/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID), url.PathEscape(refreshID))
+	u := fmt.Sprintf("%s/%s/refreshes/%s", datasetsPath(groupID), url.PathEscape(datasetID), url.PathEscape(refreshID))
 	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -254,7 +267,7 @@ func (s *datasetGroupService) RefreshExecutionDetails(ctx context.Context, group
 // RefreshHistory returns the refresh history of the specified dataset from the specified
 // workspace, most recent first: the last top entries, or the last 60 when top is 0.
 func (s *datasetGroupService) RefreshHistory(ctx context.Context, groupID, datasetID string, top int) (*types.RefreshList, error) {
-	u := fmt.Sprintf("%s/%s/%s/%s/refreshes", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	u := fmt.Sprintf("%s/%s/refreshes", datasetsPath(groupID), url.PathEscape(datasetID))
 	if top > 0 {
 		u += "?$top=" + strconv.Itoa(top)
 	}

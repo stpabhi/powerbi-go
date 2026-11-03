@@ -123,3 +123,18 @@ func TestMaxResponseBytes(t *testing.T) {
 		t.Fatalf("history %+v %v", got, err)
 	}
 }
+
+// My workspace has no group: Power BI refuses the groups paths for it.
+func TestMyWorkspaceHasNoGroup(t *testing.T) {
+	var got string
+	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+		got = r.Method + " " + r.URL.Path
+		io.WriteString(w, `{"value":[]}`)
+	})
+	if _, err := c.Datasets.Group().RefreshHistory(context.Background(), "", testDataset, 1); err != nil {
+		t.Fatal(err)
+	}
+	if want := "GET /v1.0/myorg/datasets/" + testDataset + "/refreshes"; got != want {
+		t.Errorf("request %s, want %s", got, want)
+	}
+}
