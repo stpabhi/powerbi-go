@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,6 +22,9 @@ const (
 	baseURL   = "https://api.powerbi.com/v1.0/myorg/"
 	userAgent = "powerbi-go/" + version
 	mediaType = "application/json"
+
+	// maxErrorBody bounds how much of an error response is read.
+	maxErrorBody = 1 << 20
 )
 
 // A Client manages communication with the Microsoft Power BI REST APIs.
@@ -33,6 +37,15 @@ type Client struct {
 
 	// User agent for client.
 	UserAgent string
+
+	// UseNumber decodes numbers in query results as json.Number rather than
+	// float64, so integers above 2^53 and decimals keep their exact value.
+	UseNumber bool
+
+	// MaxResponseBytes, when above 0, bounds a successful response body: reading
+	// past it fails with ErrResponseTooLarge rather than holding an unbounded
+	// answer, such as a large query result, in memory.
+	MaxResponseBytes int64
 
 	// Reuse a single struct instead of allocating one for each service on the heap.
 	common service
@@ -165,7 +178,8 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body io.Rea
 		return nil, nil, err
 	}
 	if resp.StatusCode > 399 {
-		data, _ := io.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		data, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBody))
 		msg := string(data)
 		if len(msg) == 0 {
 			msg = resp.Status
@@ -173,10 +187,44 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body io.Rea
 		return nil, nil, &types.ErrHTTP{
 			Code:    resp.StatusCode,
 			Message: msg,
+			Header:  resp.Header,
 		}
+	}
+	if c.MaxResponseBytes > 0 {
+		resp.Body = &limitedBody{rc: resp.Body, left: c.MaxResponseBytes}
 	}
 	return req, resp, err
 }
+
+// ErrResponseTooLarge is returned when a response body exceeds Client.MaxResponseBytes.
+var ErrResponseTooLarge = errors.New("powerbi: response exceeds the client's MaxResponseBytes")
+
+// limitedBody reads a response body until a limit, then fails.
+type limitedBody struct {
+	rc   io.ReadCloser
+	left int64
+}
+
+func (b *limitedBody) Read(p []byte) (int, error) {
+	if b.left <= 0 {
+		// One byte more tells a body that ends exactly at the limit from
+		// one that goes on.
+		var one [1]byte
+		n, err := b.rc.Read(one[:])
+		if n > 0 {
+			return 0, ErrResponseTooLarge
+		}
+		return 0, err
+	}
+	if int64(len(p)) > b.left {
+		p = p[:b.left]
+	}
+	n, err := b.rc.Read(p)
+	b.left -= int64(n)
+	return n, err
+}
+
+func (b *limitedBody) Close() error { return b.rc.Close() }
 
 func toObject[T any](resp *http.Response, obj T) (def T, _ error) {
 	defer resp.Body.Close()

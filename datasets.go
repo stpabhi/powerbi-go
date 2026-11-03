@@ -2,8 +2,11 @@ package powerbi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"path"
+	"strconv"
 
 	"github.com/stpabhi/powerbi-go/types"
 )
@@ -32,6 +35,9 @@ type DatasetGroup interface {
 	DirectQueryRefreshSchedule(ctx context.Context, groupID, datasetID string) (*types.DirectQueryRefreshSchedule, error)
 	GatewayDatasources(ctx context.Context, groupID, datasetID string) (*types.GatewayDatasourceList, error)
 	Parameters(ctx context.Context, groupID, datasetID string) (*types.MashupParameterList, error)
+	RefreshDataset(ctx context.Context, groupID, datasetID string, req types.DatasetRefreshRequest) (*types.RefreshAccepted, error)
+	RefreshExecutionDetails(ctx context.Context, groupID, datasetID, refreshID string) (*types.RefreshExecutionDetails, error)
+	RefreshHistory(ctx context.Context, groupID, datasetID string, top int) (*types.RefreshList, error)
 }
 
 type datasetGroupService service
@@ -104,7 +110,15 @@ func (s *datasetGroupService) ExecuteQueries(ctx context.Context, groupID, datas
 	}
 	defer resp.Body.Close()
 
-	return toObject(resp, &types.DatasetExecuteQueriesResponse{})
+	var out types.DatasetExecuteQueriesResponse
+	dec := json.NewDecoder(resp.Body)
+	if s.client.UseNumber {
+		dec.UseNumber()
+	}
+	if err := dec.Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 // Dataset returns the specified dataset from the specified workspace.
@@ -201,4 +215,54 @@ func (s *datasetGroupService) Parameters(ctx context.Context, groupID, datasetID
 	defer resp.Body.Close()
 
 	return toObject(resp, &types.MashupParameterList{})
+}
+
+// RefreshDataset triggers a refresh of the specified dataset from the specified workspace.
+// Power BI accepts it asynchronously; follow it with RefreshHistory, or with
+// RefreshExecutionDetails for an enhanced refresh. A request whose response is lost
+// may still have been accepted, so check RefreshHistory before sending it again.
+func (s *datasetGroupService) RefreshDataset(ctx context.Context, groupID, datasetID string, req types.DatasetRefreshRequest) (*types.RefreshAccepted, error) {
+	u := fmt.Sprintf("%s/%s/%s/%s/refreshes", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	_, resp, err := s.client.postJSON(ctx, u, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	out := &types.RefreshAccepted{RequestID: resp.Header.Get("x-ms-request-id"), Location: resp.Header.Get("Location")}
+	// The Location URL ends in the refresh's ID.
+	if out.Location != "" {
+		if l, err := url.Parse(out.Location); err == nil {
+			out.RequestID = path.Base(l.Path)
+		}
+	}
+	return out, nil
+}
+
+// RefreshExecutionDetails returns the state of the specified enhanced refresh of the specified dataset.
+func (s *datasetGroupService) RefreshExecutionDetails(ctx context.Context, groupID, datasetID, refreshID string) (*types.RefreshExecutionDetails, error) {
+	u := fmt.Sprintf("%s/%s/%s/%s/refreshes/%s", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID), url.PathEscape(refreshID))
+	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.RefreshExecutionDetails{})
+}
+
+// RefreshHistory returns the refresh history of the specified dataset from the specified
+// workspace, most recent first: the last top entries, or the last 60 when top is 0.
+func (s *datasetGroupService) RefreshHistory(ctx context.Context, groupID, datasetID string, top int) (*types.RefreshList, error) {
+	u := fmt.Sprintf("%s/%s/%s/%s/refreshes", groupsBasePath, url.PathEscape(groupID), datasetsBasePath, url.PathEscape(datasetID))
+	if top > 0 {
+		u += "?$top=" + strconv.Itoa(top)
+	}
+	_, resp, err := s.client.doRequest(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return toObject(resp, &types.RefreshList{})
 }

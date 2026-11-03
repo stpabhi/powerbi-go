@@ -9,6 +9,9 @@ import (
 type ErrHTTP struct {
 	Code    int
 	Message string
+	// Header is the response's headers, such as RequestId and Retry-After;
+	// nil for an error the client made itself.
+	Header http.Header
 }
 
 func (e *ErrHTTP) Error() string {

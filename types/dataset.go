@@ -136,7 +136,7 @@ type BindToGatewayRequest struct {
 }
 
 type DatasetExecuteQueriesRequest struct {
-	ImpersonatedUserName string                                     `json:"impersonatedUserName"`
+	ImpersonatedUserName string                                     `json:"impersonatedUserName,omitempty"`
 	Queries              []DatasetExecuteQueriesQuery               `json:"queries"`
 	SerializerSettings   DatasetExecuteQueriesSerializationSettings `json:"serializerSettings"`
 }
