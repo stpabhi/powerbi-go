@@ -119,7 +119,7 @@ func (s *groupService) GetGroupsAsAdmin(ctx context.Context, opts types.GroupsOp
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return result.Value, nil
 }
 
